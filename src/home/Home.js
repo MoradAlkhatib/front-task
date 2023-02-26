@@ -1,6 +1,6 @@
 import React from 'react'
 import "./Home.css"
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 
 
 
@@ -8,6 +8,17 @@ function Home() {
 
   const [inputs, setInputs] = useState({ name: "", sectors: {}, agreed: false });
   const [missing, setMessing] = useState(<p></p>);
+  const [data,setData]=useState()
+  
+  useEffect(() => {
+    fetch("https://wrong-pencil-production.up.railway.app/sectors")
+    .then(response => response.json())
+        // 4. Setting *dogImage* to the image url that we received from the response above
+    .then(data => {
+       console.log(data);
+      setData(data)})
+  },[])
+
   function selectedFunction(e) {
     var options = e.target.options;
     var value = {};
@@ -27,6 +38,7 @@ function Home() {
 
 
 
+
     const name = event.target.name;
     const value = event.target.value;
     if (name === "name") {
@@ -41,12 +53,39 @@ function Home() {
     }
 
   }
-  
+  async function postData(url = "", data = {}) {
+    // Default options are marked with *
+    const response = await fetch(url, {
+      method: "POST", // *GET, POST, PUT, DELETE, etc.
+     
+     
+      
+      headers: {
+        "Content-Type": "application/json",
+        // 'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      redirect: "follow", // manual, *follow, error
+      referrerPolicy: "no-referrer", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+      body: data, // body data type must match "Content-Type" header
+    });
+    return response.json(); // parses JSON response into native JavaScript objects
+  }
+
   const handleSubmit = (event) => {
     event.preventDefault();
     
     if (inputs.name === "" || Object.keys(inputs.sectors).length === 0 || inputs.agreed=== false ){
-      setMessing(<p>Please fill the missing data</p>)
+      setMessing(<p className='errorp'>Please fill the missing data</p>)
+    }
+    else {
+        console.log(inputs)
+        let bd_data = {name:inputs.name,agreed:inputs.agreed,sectors_col:[...Object.values(inputs.sectors)]}
+        console.log("db",JSON.stringify(bd_data))
+        
+      const url = "https://wrong-pencil-production.up.railway.app/sectors";
+      console.log(postData(url,JSON.stringify(bd_data)))
+
+
     }
     
 
@@ -60,14 +99,16 @@ function Home() {
   )
 
   return (
-    <div className='Home'>
-      <div><p>Please enter your name and pick the Sectors you are currently involved in.
+    <div className='home'>
+      <div className='sub-main'>
+      <div>
+        <p>Please enter your name and pick the Sectors you are currently involved in.
       </p>
       {missing}</div>
       
       <form onSubmit={handleSubmit}>
-        <label >Name:</label><input type="text" name='name' value={inputs.name} onChange={handleChange} placeholder="name" />
-        <label >Sectors:</label>
+        <label ></label><input type="text" name='name' value={inputs.name} onChange={handleChange} placeholder="Enter your name" />
+        <label >Sectors</label>
         <select  multiple={true} size="8" name='sectors' id='sectors' onChange={handleChange}>
           <option value="1">Manufacturing</option>
           <option value="19">&nbsp;&nbsp;&nbsp;&nbsp;Construction materials</option>
@@ -157,10 +198,13 @@ function Home() {
       </form>
       <div>
         selected sectors
-        {selectedSectors}
+        <div className='selected-sec'>
+          {selectedSectors}
+        </div>
+      </div>
       </div>
     </div>
   )
 }
 
-export default Home
+export default Home;
